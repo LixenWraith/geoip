@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
@@ -29,6 +30,11 @@ const (
 	batchSize = 100 // ip-api.com supports up to 100 queries per batch request
 	apiURL    = "http://ip-api.com/batch?fields=status,country,message"
 )
+
+type kv struct {
+	Key   string
+	Value int
+}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -74,10 +80,20 @@ func main() {
 		time.Sleep(1500 * time.Millisecond)
 	}
 
-	// Print out the country counts
-	for country, count := range countryCounts {
-		fmt.Printf("%s: %d\n", country, count)
+	// Print out the country counts sorted by descending count
+	var sortedCountries []kv
+	for k, v := range countryCounts {
+		sortedCountries = append(sortedCountries, kv{k, v})
 	}
+
+	sort.Slice(sortedCountries, func(i, j int) bool {
+		return sortedCountries[i].Value > sortedCountries[j].Value
+	})
+
+	for _, kv := range sortedCountries {
+		fmt.Printf("%s: %d\n", kv.Key, kv.Value)
+	}
+
 }
 
 // readAndValidateIPs reads a file, trims each line, and returns a slice of valid IPv4 address strings.
