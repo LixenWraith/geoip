@@ -1,0 +1,3 @@
+-o linux
+-s ./main.go
+-t bin/geoip-linux

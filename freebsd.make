@@ -1,0 +1,3 @@
+-o freebsd
+-s ./main.go
+-t bin/geoip-freebsd
