@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -35,9 +37,13 @@ func main() {
 	}
 
 	filename := os.Args[1]
-	ips, err := readIPs(filename)
+	ips, err := readAndValidateIPs(filename)
 	if err != nil {
 		log.Fatalf("Error reading IP file: %v", err)
+	}
+
+	if len(ips) == 0 {
+		log.Fatalf("No valid IP addresses found in file.")
 	}
 
 	countryCounts := make(map[string]int)
@@ -74,8 +80,8 @@ func main() {
 	}
 }
 
-// readIPs reads a file and returns a slice of non-empty IP strings.
-func readIPs(filename string) ([]string, error) {
+// readAndValidateIPs reads a file, trims each line, and returns a slice of valid IPv4 address strings.
+func readAndValidateIPs(filename string) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -84,11 +90,19 @@ func readIPs(filename string) ([]string, error) {
 
 	var ips []string
 	scanner := bufio.NewScanner(file)
+	lineNum := 0
 	for scanner.Scan() {
-		line := scanner.Text()
-		if line != "" {
-			ips = append(ips, line)
+		lineNum++
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
 		}
+		// Validate the IP using net.ParseIP.
+		if netIP := net.ParseIP(line); netIP == nil {
+			log.Printf("Line %d: '%s' is not a valid IP address; skipping.", lineNum, line)
+			continue
+		}
+		ips = append(ips, line)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
