@@ -56,4 +56,3 @@ Requires Go 1.23.5 or later.
 ## Use Case
 
 Useful for analyzing geographical distribution of banned IPs from server logs.
-```
